@@ -1,0 +1,1334 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>НЛМК. Логистические затраты. Факторный анализ</title>
+  <style>
+    :root {
+      --bg: #f1f1f1;
+      --panel: #fff;
+      --line: #d9dee6;
+      --line-soft: #edf0f4;
+      --ink: #071632;
+      --muted: #747b86;
+      --blue: #2f78ed;
+      --blue-2: #72a6f2;
+      --blue-soft: #e7f1ff;
+      --blue-tab: #dbeaff;
+      --grey-tab: #eeeeee;
+      --red: #ef9f9a;
+      --red-strong: #d83c32;
+      --green: #49b45f;
+      --grey-bar: #cfd5df;
+      --dark-grey: #aab3c2;
+      --filter: #d8e2f1;
+      --shadow: 0 1px 6px rgba(7, 22, 50, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Segoe UI Variable Text", "Segoe UI", "Aptos", sans-serif;
+      font-weight: 400;
+      letter-spacing: 0;
+    }
+
+    button,
+    select {
+      font: inherit;
+    }
+
+    .report {
+      width: 1620px;
+      min-height: 920px;
+      margin: 0 auto;
+      background: #f2f2f2;
+      border-left: 1px solid #e1e1e1;
+      border-right: 1px solid #e1e1e1;
+    }
+
+    .header {
+      height: 66px;
+      display: grid;
+      grid-template-columns: 128px 1fr 260px;
+      align-items: center;
+      gap: 14px;
+      padding: 8px 18px 7px 14px;
+      background: #f7f7f7;
+      border-bottom: 4px solid #e5e5e5;
+    }
+
+    .logo {
+      width: 94px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border: 3px solid #1d5ba4;
+      border-radius: 50%;
+      color: #1d5ba4;
+      font-size: 24px;
+      font-weight: 650;
+      background: #fff;
+      box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 4px #1d5ba4;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 25px;
+      line-height: 1;
+      font-weight: 650;
+      color: var(--ink);
+    }
+
+    .header-right {
+      display: grid;
+      justify-items: end;
+      gap: 7px;
+      font-size: 13px;
+    }
+
+    .status {
+      color: #d60000;
+      font-weight: 500;
+    }
+
+    .updated {
+      color: #333;
+      text-align: right;
+      line-height: 1.15;
+    }
+
+    .toolbar {
+      height: 36px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      padding: 5px 14px;
+      background: #fff;
+      border-bottom: 4px solid #eeeeee;
+    }
+
+    .periods,
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .period-label {
+      font-size: 11px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .select {
+      height: 19px;
+      min-width: 52px;
+      border: 1px solid #c6d0dc;
+      border-radius: 2px;
+      background: linear-gradient(90deg, #eef4fc, #dce8f8);
+      color: #0d1a34;
+      font-size: 10px;
+      padding: 1px 16px 1px 5px;
+    }
+
+    .dash {
+      color: #666;
+      font-weight: 500;
+      padding: 0 1px;
+    }
+
+    .tabs {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0 14px;
+      background: #f5f5f5;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .tab {
+      height: 27px;
+      min-width: 90px;
+      padding: 5px 11px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #111a30;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .tab.section-blue {
+      background: var(--blue-tab);
+      color: #164e9d;
+      border-color: #c7ddfb;
+    }
+
+    .tab.active {
+      background: #fff;
+      border-color: #b7c5d8;
+      box-shadow: 0 -2px 0 var(--blue) inset;
+    }
+
+    .tab.section-blue.active {
+      background: var(--blue-tab);
+      border-color: #8fb9f4;
+      box-shadow: 0 -2px 0 var(--blue) inset;
+    }
+
+    .tab:hover,
+    .small-btn:hover,
+    .table-tab:hover,
+    .reset:hover {
+      filter: brightness(0.97);
+    }
+
+    .body {
+      display: grid;
+      grid-template-columns: 1fr 255px;
+      gap: 10px;
+      padding: 10px 8px 8px 6px;
+    }
+
+    .main {
+      display: grid;
+      grid-template-rows: 128px 342px 304px;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .filter-pane {
+      background: #eeeeee;
+      padding: 2px 12px 12px;
+      min-height: 760px;
+      border-left: 1px solid #dddddd;
+    }
+
+    .filter-head {
+      display: grid;
+      grid-template-columns: 1fr 88px;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 12px;
+      min-height: 36px;
+    }
+
+    .filter-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      color: #27364d;
+    }
+
+    .reset {
+      height: 32px;
+      border: 0;
+      border-radius: 2px;
+      background: #5792ee;
+      color: #fff;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .filter-group {
+      margin: 0 0 12px;
+    }
+
+    .filter-group label {
+      display: block;
+      margin-bottom: 6px;
+      color: #121a30;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .filter-select {
+      width: 100%;
+      height: 23px;
+      border: 1px solid #cad4e2;
+      border-radius: 2px;
+      background: var(--filter);
+      color: #10203b;
+      font-size: 11px;
+      padding: 2px 6px;
+    }
+
+    .filter-select.is-changed {
+      border-color: #6b9eea;
+      background: #eaf2ff;
+    }
+
+    .kpi-strip {
+      display: grid;
+      grid-template-columns: 1.08fr 1.04fr 1.12fr 1.08fr 1fr 1.14fr;
+      gap: 10px;
+    }
+
+    .tile {
+      background: var(--panel);
+      border: 1px solid var(--line-soft);
+      box-shadow: var(--shadow);
+      padding: 12px 14px 10px;
+      min-width: 0;
+      transition: background-color 150ms ease;
+    }
+
+    .tile.is-pulsing {
+      background: #f4f8ff;
+    }
+
+    .tile-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--ink);
+    }
+
+    .unit {
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .big-number {
+      margin-top: 13px;
+      font-size: 52px;
+      line-height: 0.9;
+      font-weight: 650;
+      color: var(--blue);
+      white-space: nowrap;
+    }
+
+    .kpi-note {
+      margin-top: 10px;
+      color: #8a8d95;
+      font-size: 15px;
+    }
+
+    .delta-up,
+    .delta-down {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .delta-up {
+      color: var(--red-strong);
+    }
+
+    .delta-down {
+      color: var(--green);
+    }
+
+    .factor-summary {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: start;
+      height: 100%;
+    }
+
+    .factor-summary h2 {
+      margin: 0 0 12px;
+      font-size: 15px;
+      font-weight: 400;
+    }
+
+    .factor-list {
+      display: grid;
+      grid-template-columns: auto auto;
+      gap: 4px 12px;
+      font-size: 15px;
+    }
+
+    .factor-list span:nth-child(odd) {
+      color: var(--muted);
+    }
+
+    .factor-list span:nth-child(even) {
+      text-align: right;
+      font-weight: 500;
+    }
+
+    .formula-box {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #4f83ea;
+      color: #2d66dc;
+      font-family: Georgia, serif;
+      font-style: italic;
+      font-size: 28px;
+      background: #fff;
+    }
+
+    .legend {
+      display: grid;
+      gap: 8px;
+      align-content: center;
+      margin-top: 20px;
+      font-size: 12px;
+    }
+
+    .legend-row {
+      display: grid;
+      grid-template-columns: 8px 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .swatch {
+      width: 8px;
+      height: 8px;
+    }
+
+    .swatch.blue {
+      background: var(--blue-2);
+    }
+
+    .swatch.red {
+      background: var(--red);
+    }
+
+    .swatch.grey {
+      background: var(--grey-bar);
+    }
+
+    .panel {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+
+    .panel-title {
+      position: absolute;
+      top: -14px;
+      left: 72px;
+      min-width: 170px;
+      padding: 5px 9px;
+      background: #efefef;
+      color: #222;
+      font-size: 14px;
+      font-weight: 400;
+      z-index: 2;
+    }
+
+    .unit-label {
+      position: absolute;
+      left: 12px;
+      top: 15px;
+      color: #7c7c7c;
+      font-size: 13px;
+    }
+
+    .wf-note {
+      position: absolute;
+      right: 8px;
+      top: -16px;
+      width: 86px;
+      padding: 9px 6px;
+      background: #efefef;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.15;
+      font-weight: 500;
+    }
+
+    .waterfall {
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(12, minmax(72px, 1fr));
+      gap: 6px;
+      align-items: end;
+      padding: 56px 20px 34px 24px;
+    }
+
+    .wf-item {
+      height: 242px;
+      display: grid;
+      grid-template-rows: 1fr 50px;
+      min-width: 0;
+      align-items: end;
+      text-align: center;
+      cursor: pointer;
+      transition: opacity 140ms ease, transform 140ms ease;
+    }
+
+    .wf-item:hover {
+      transform: translateY(-2px);
+    }
+
+    .wf-item.is-selected .wf-bar {
+      outline: 3px solid rgba(47, 120, 237, 0.28);
+      outline-offset: 3px;
+    }
+
+    .wf-item.is-muted {
+      opacity: 0.42;
+    }
+
+    .wf-bar-wrap {
+      height: 192px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      border-bottom: 1px solid #d6d6d6;
+    }
+
+    .wf-bar {
+      width: 58px;
+      height: var(--h);
+      min-height: 6px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 4px;
+      color: #111;
+      font-size: 12px;
+      background: var(--blue-2);
+      transition: height 220ms ease, background-color 180ms ease;
+    }
+
+    .wf-bar.negative {
+      background: var(--grey-bar);
+    }
+
+    .wf-bar.total {
+      background: var(--dark-grey);
+    }
+
+    .wf-label {
+      display: flex;
+      align-items: start;
+      justify-content: center;
+      min-height: 48px;
+      padding-top: 9px;
+      color: #0d1630;
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 600;
+    }
+
+    .bottom {
+      display: grid;
+      grid-template-columns: 1fr 1.06fr;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .analysis-panel {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid var(--line-soft);
+      box-shadow: var(--shadow);
+      padding: 10px 12px;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .analysis-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .analysis-title {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 400;
+    }
+
+    .hint {
+      color: #5b5b5b;
+      font-size: 10px;
+      font-style: italic;
+    }
+
+    .small-btn {
+      height: 26px;
+      min-width: 72px;
+      border: 0;
+      border-radius: 2px;
+      background: #d2d6dc;
+      color: #333;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .table-tabs {
+      display: flex;
+      gap: 6px;
+      margin: 0 0 8px;
+    }
+
+    .table-tab {
+      min-width: 74px;
+      height: 24px;
+      border: 0;
+      background: #dce3ed;
+      color: #1b263a;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .table-tab.active {
+      background: #cfd7e3;
+      font-weight: 600;
+    }
+
+    .factor-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 11px;
+    }
+
+    .factor-table th,
+    .factor-table td {
+      height: 25px;
+      border-bottom: 1px solid #d8d8d8;
+      padding: 3px 6px;
+      vertical-align: middle;
+    }
+
+    .factor-table th {
+      color: #777;
+      font-weight: 400;
+      text-align: left;
+    }
+
+    .factor-table tbody tr {
+      cursor: pointer;
+    }
+
+    .factor-table tbody tr:hover td {
+      background-color: #f5f8fc;
+    }
+
+    .factor-table tbody tr.is-selected td {
+      background-color: #e8f1ff;
+      box-shadow: inset 0 1px 0 #b7cff4, inset 0 -1px 0 #b7cff4;
+    }
+
+    .factor-table td:not(:first-child),
+    .factor-table th:not(:first-child) {
+      border-left: 1px solid #d2d2d2;
+    }
+
+    .name-col {
+      width: 170px;
+      color: #777;
+    }
+
+    .bar-cell {
+      position: relative;
+      overflow: hidden;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bar-cell::before {
+      content: "";
+      position: absolute;
+      top: 5px;
+      bottom: 5px;
+      left: var(--left, 48%);
+      width: var(--w);
+      background: var(--cell-color, var(--blue-2));
+      opacity: 0.95;
+      z-index: 0;
+    }
+
+    .bar-cell.negative::before {
+      background: var(--grey-bar);
+      transform: translateX(calc(-1 * var(--w)));
+    }
+
+    .bar-cell.red::before {
+      background: var(--red);
+    }
+
+    .bar-cell span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .compact-table th,
+    .compact-table td {
+      height: 28px;
+      border: 1px solid #dfe6f0;
+      padding: 4px 6px;
+    }
+
+    .compact-table th {
+      background: #f8f9fb;
+      color: #777;
+    }
+
+    .total-row td {
+      font-weight: 650;
+      background: #fafafa;
+    }
+
+    .source-note {
+      position: absolute;
+      left: 14px;
+      bottom: 7px;
+      color: #777;
+      font-size: 10px;
+    }
+
+    .prototype-toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(12px);
+      min-width: 320px;
+      padding: 10px 14px;
+      border: 1px solid #b8c7dc;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 8px 24px rgba(7, 22, 50, 0.16);
+      color: #0d1a34;
+      font-size: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+      z-index: 20;
+    }
+
+    .prototype-toast.is-visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="report">
+    <header class="header">
+      <div class="logo">НЛМК</div>
+      <h1 id="page-title">НЛМК. Логистические затраты. Факторный анализ</h1>
+      <div class="header-right">
+        <div class="status" id="page-status">Есть отклонения</div>
+        <div class="updated">Дата обновления:<br>2026-04-06</div>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="periods">
+        <span class="period-label">База</span>
+        <select class="select period-control"><option>2025</option><option>2024</option></select>
+        <select class="select period-control"><option>Y11</option><option>Y10</option><option>Y12</option></select>
+        <select class="select period-control"><option>Мес.</option><option>Кв.</option><option>YTD</option></select>
+        <span class="dash">-</span>
+        <select class="select period-control"><option>2025</option><option>2024</option></select>
+        <select class="select period-control"><option>Y11</option><option>Y10</option><option>Y12</option></select>
+        <select class="select period-control"><option>Мес.</option><option>Кв.</option><option>YTD</option></select>
+        <span style="width:12px"></span>
+        <span class="period-label">Отчет</span>
+        <select class="select period-control"><option>2025</option><option>2024</option><option>2026</option></select>
+        <select class="select period-control"><option>Y12</option><option>Y11</option><option>Y10</option></select>
+        <select class="select period-control"><option>Мес.</option><option>Кв.</option><option>YTD</option></select>
+      </div>
+      <div class="actions">
+        <span class="period-label">Показатель</span>
+        <select class="select" id="metric-mode"><option>Затраты</option><option>Стоимость / т</option><option>Объем</option></select>
+      </div>
+    </div>
+
+    <nav class="tabs" aria-label="Страницы системы">
+      <button class="tab section-blue" data-page="summary">Свод затрат</button>
+      <button class="tab section-blue" data-page="inbound">Входящая логистика</button>
+      <button class="tab section-blue" data-page="outbound">Исходящая логистика</button>
+      <button class="tab active" data-page="inRail">Входящая ЖД</button>
+      <button class="tab" data-page="inAuto">Входящая авто</button>
+      <button class="tab" data-page="outRail">Исходящая ЖД</button>
+      <button class="tab" data-page="ports">Порты</button>
+      <button class="tab" data-page="mdm">МДМ</button>
+      <button class="tab" data-page="containers">Контейнеры</button>
+    </nav>
+
+    <div class="body">
+      <main class="main">
+        <section class="kpi-strip" aria-label="Ключевые показатели">
+          <div class="tile">
+            <p class="tile-title" id="kpi-total-title">Затраты ЖД, <span class="unit">млрд руб</span></p>
+            <div class="big-number" id="kpi-total">54,1</div>
+            <div class="kpi-note" id="kpi-total-note">50,9 (▲ +6,3%)</div>
+          </div>
+          <div class="tile">
+            <p class="tile-title">Изменение затрат, <span class="unit">млрд руб</span></p>
+            <div class="big-number" id="kpi-delta">+3,2</div>
+            <div class="kpi-note" id="kpi-delta-note">к базовому периоду</div>
+          </div>
+          <div class="tile">
+            <div class="factor-summary">
+              <div>
+                <h2>Факторы</h2>
+                <div class="factor-list" id="factor-list"></div>
+              </div>
+              <div class="formula-box">F</div>
+            </div>
+          </div>
+          <div class="tile">
+            <p class="tile-title" id="kpi-volume-title">Объем, <span class="unit">млн т</span></p>
+            <div class="big-number" id="kpi-volume">18,4</div>
+            <div class="kpi-note" id="kpi-volume-note">18,0 (▲ +2,3%)</div>
+          </div>
+          <div class="tile">
+            <p class="tile-title" id="kpi-cost-title">Стоимость, <span class="unit">руб/т</span></p>
+            <div class="big-number" id="kpi-cost" style="font-size:46px">2 940</div>
+            <div class="kpi-note" id="kpi-cost-note">2 824 (▲ +4,1%)</div>
+          </div>
+          <div class="tile">
+            <p class="tile-title">Рост относительно базового периода</p>
+            <div class="legend">
+              <div class="legend-row"><span class="swatch red"></span><span>снижение / компенсация</span></div>
+              <div class="legend-row"><span class="swatch blue"></span><span>рост затрат</span></div>
+              <div class="legend-row"><span class="swatch grey"></span><span>итоговые и базовые значения</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="panel">
+            <div class="panel-title" id="panel-title">Входящая ЖД: изменение затрат</div>
+            <div class="unit-label">млрд.руб</div>
+            <div class="wf-note" id="wf-note">Δ затрат<br>+3,2</div>
+            <div class="waterfall" id="waterfall"></div>
+          </div>
+        </section>
+
+        <section class="bottom">
+          <div class="analysis-panel">
+            <div class="analysis-head">
+              <h2 class="analysis-title" id="left-title">Факторы в разрезе продукции, <span class="unit">млн руб</span> <span class="hint">*клик по строке меняет выбор</span></h2>
+              <button class="small-btn" id="left-mode">Продукт</button>
+            </div>
+            <table class="factor-table" id="left-table"></table>
+            <div class="source-note">Источник: структура факторной модели `ФА_ЖД_Входящие_12М 2025_AI.xlsx`; числа в MVP демонстрационные.</div>
+          </div>
+
+          <div class="analysis-panel">
+            <div class="analysis-head">
+              <h2 class="analysis-title" id="right-title">Факторы в разрезе направлений, <span class="unit">млн руб</span></h2>
+              <button class="small-btn" id="right-mode">Детализация</button>
+            </div>
+            <div class="table-tabs" id="factor-tabs"></div>
+            <table class="factor-table compact-table" id="right-table"></table>
+          </div>
+        </section>
+      </main>
+
+      <aside class="filter-pane" aria-label="Фильтры">
+        <div class="filter-head">
+          <h2 class="filter-title">Фильтры</h2>
+          <button class="reset" id="reset">Reset</button>
+        </div>
+        <div id="filters"></div>
+      </aside>
+    </div>
+  </div>
+
+  <div class="prototype-toast" id="prototype-toast">Выбор обновлен</div>
+
+  <script>
+    const baseFilters = [
+      ["Сценарий сравнения", ["Факт к базовому периоду", "Факт к плану", "Факт к бюджету"]],
+      ["Периодичность", ["12М", "Квартал", "Месяц"]],
+      ["Компания группы", ["НЛМК ПАО", "Stand-alone", "Группа НЛМК"]]
+    ];
+
+    const commonFactors = ["Цены", "Станция", "Рынок", "Тип отправки", "Структура", "Курс"];
+
+    const pages = {
+      summary: {
+        label: "Свод затрат",
+        title: "НЛМК. Логистические затраты. Свод",
+        panelTitle: "Логистические затраты: изменение затрат",
+        totalTitle: "Затраты, млрд руб",
+        total: 142.8, base: 134.2, delta: 8.6, volume: 46.2, volumeBase: 45.3, cost: 3091, costBase: 2963,
+        status: "Есть отклонения",
+        factors: [["База", 134.2, "total"], ["Объем", 2.1], ["Структура", 3.4], ["Цены", 4.2], ["Станция", 0.9], ["Рынок", 1.6], ["Тип отправки", 0.4], ["Статнагрузка", -0.5], ["Курс", 1.0], ["Усилия", -1.4], ["Прочее", -2.1], ["Отчет", 142.8, "total"]],
+        filters: [["Блок логистики", ["Все блоки", "Входящая логистика", "Исходящая логистика"]], ["Вид расходов", ["Все расходы", "ЖД", "Авто", "Порты", "Контейнеры"]], ["Дивизион", ["Unlimited", "Плоский прокат", "Сырье", "Экспорт"]]],
+        rows: ["Входящая ЖД", "Входящая авто", "Исходящая ЖД", "Порты", "МДМ", "Контейнеры"],
+        directions: ["ЖД входящая", "Авто входящая", "ЖД исходящая", "Порты", "Контейнеры"]
+      },
+      inbound: {
+        label: "Входящая логистика",
+        title: "НЛМК. Входящая логистика. Факторный анализ",
+        panelTitle: "Входящая логистика: изменение затрат",
+        totalTitle: "Затраты входящие, млрд руб",
+        total: 61.9, base: 58.1, delta: 3.8, volume: 20.8, volumeBase: 20.1, cost: 2976, costBase: 2890,
+        status: "Есть отклонения",
+        factors: [["База", 58.1, "total"], ["Объем", 1.1], ["Структура", 1.4], ["Цены", 2.0], ["Станция", 0.7], ["Рынок", 0.5], ["Тип отправки", 0.4], ["Статнагрузка", -0.6], ["Курс", 0.2], ["Усилия", -1.0], ["Прочее", -0.9], ["Отчет", 61.9, "total"]],
+        filters: [["Вид продукции", ["Unlimited", "КОКС/УГОЛЬ", "СЫРЬЕ", "ПРОЧИЕ ГРУЗЫ"]], ["Комбинат", ["Unlimited", "Липецк", "Стойленский ГОК", "Алтай-Кокс"]], ["Поставщик", ["Unlimited", "Поставщик A", "Поставщик B", "Поставщик C"]]],
+        rows: ["КОКС/УГОЛЬ", "СЫРЬЕ", "Доломит", "Руда", "Прочие грузы"],
+        directions: ["ЖД", "Авто", "Станция Бардино", "Станция Мульда", "Станция Ерунаково"]
+      },
+      outbound: {
+        label: "Исходящая логистика",
+        title: "НЛМК. Исходящая логистика. Факторный анализ",
+        panelTitle: "Исходящая логистика: изменение затрат",
+        totalTitle: "Затраты исходящие, млрд руб",
+        total: 80.9, base: 76.1, delta: 4.8, volume: 25.4, volumeBase: 25.2, cost: 3185, costBase: 3020,
+        status: "Есть отклонения",
+        factors: [["База", 76.1, "total"], ["Объем", 0.7], ["Структура", 2.0], ["Цены", 2.6], ["Станция", 0.5], ["Рынок", 1.1], ["Тип отправки", 0.6], ["Статнагрузка", -0.2], ["Курс", 0.8], ["Усилия", -1.2], ["Прочее", -2.1], ["Отчет", 80.9, "total"]],
+        filters: [["Рынок", ["Unlimited", "РФ", "СНГ", "Экспорт"]], ["Канал доставки", ["Unlimited", "ЖД", "Порты", "Контейнеры", "МДМ"]], ["Клиент", ["Unlimited", "Клиент A", "Клиент B", "Клиент C"]]],
+        rows: ["Г/к прокат", "Х/к прокат", "Слябы", "Оцинкованный прокат", "Трубы"],
+        directions: ["ЖД", "Порты", "Контейнеры", "МДМ", "Экспорт"]
+      },
+      inRail: {
+        label: "Входящая ЖД",
+        title: "НЛМК. Входящая ЖД. Факторный анализ",
+        panelTitle: "Входящая ЖД: изменение затрат",
+        totalTitle: "Затраты ЖД, млрд руб",
+        total: 54.1, base: 50.9, delta: 3.2, volume: 18.4, volumeBase: 18.0, cost: 2940, costBase: 2824,
+        status: "Есть отклонения",
+        factors: [["База", 50.9, "total"], ["Объем", 0.8], ["Структура", 1.2], ["Цены", 1.7], ["Станция", 0.5], ["Рынок", 0.6], ["Тип отправки", 0.4], ["Статнагрузка", -0.4], ["Курс", 0.3], ["Усилия", -1.1], ["Прочее", -0.8], ["Отчет", 54.1, "total"]],
+        filters: [["Вид продукции", ["Unlimited", "КОКС/УГОЛЬ", "СЫРЬЕ", "ПРОЧИЕ ГРУЗЫ"]], ["Станция отправления", ["Unlimited", "Бардино", "Мульда", "Ерунаково", "Бочаты"]], ["Подвижной состав", ["Unlimited", "ПВ", "ПВ+ОК", "ОК", "КР"]], ["Тип отправки", ["Unlimited", "м", "гр", "пв"]], ["Грузоподъемность", ["Unlimited", "до 75 тонн", "св. 75 тонн"]], ["Оператор*", ["Требует DWH поля", "Оператор A", "Оператор B"]]],
+        rows: ["Угольный концентрат", "Руда железная", "Доломит", "Кокс доменный", "Известняк", "Прочие грузы"],
+        directions: ["Бардино", "Мульда", "Ерунаково", "Бочаты", "Полосухино"]
+      },
+      inAuto: {
+        label: "Входящая авто",
+        title: "НЛМК. Входящая автологистика. Факторный анализ",
+        panelTitle: "Входящая авто: изменение затрат",
+        totalTitle: "Затраты авто, млрд руб",
+        total: 7.8, base: 7.2, delta: 0.6, volume: 2.4, volumeBase: 2.3, cost: 3250, costBase: 3130,
+        status: "Отклонения умеренные",
+        factors: [["База", 7.2, "total"], ["Объем", 0.2], ["Структура", 0.1], ["Цены", 0.4], ["Станция", 0.0], ["Рынок", 0.2], ["Тип отправки", 0.1], ["Статнагрузка", -0.1], ["Курс", 0.0], ["Усилия", -0.2], ["Прочее", -0.1], ["Отчет", 7.8, "total"]],
+        filters: [["Перевозчик авто", ["Unlimited", "ТК Север", "ТК Липецк", "ТК Восток"]], ["Тип ТС", ["Unlimited", "Тент", "Самосвал", "Борт"]], ["Плечо доставки", ["Unlimited", "до 100 км", "100-500 км", "500+ км"]], ["Рейс", ["Unlimited", "Плановый", "Срочный", "Разовый"]], ["Топливный индекс", ["Все", "Рост", "Снижение"]]],
+        rows: ["Известняк", "Флюсы", "ТМЦ", "Запчасти", "Прочее"],
+        directions: ["ТК Север", "ТК Липецк", "ТК Восток", "Маршрут A", "Маршрут B"]
+      },
+      outRail: {
+        label: "Исходящая ЖД",
+        title: "НЛМК. Исходящая ЖД. Факторный анализ",
+        panelTitle: "Исходящая ЖД: изменение затрат",
+        totalTitle: "Затраты ЖД, млрд руб",
+        total: 39.6, base: 37.2, delta: 2.4, volume: 13.7, volumeBase: 13.5, cost: 2891, costBase: 2756,
+        status: "Есть отклонения",
+        factors: [["База", 37.2, "total"], ["Объем", 0.4], ["Структура", 1.0], ["Цены", 1.3], ["Станция", 0.6], ["Рынок", 0.5], ["Тип отправки", 0.4], ["Статнагрузка", -0.2], ["Курс", 0.2], ["Усилия", -0.6], ["Прочее", -1.2], ["Отчет", 39.6, "total"]],
+        filters: [["Завод отгрузки", ["Unlimited", "Липецк", "Калуга", "Урал"]], ["Станция назначения", ["Unlimited", "Назначение A", "Назначение B", "Назначение C"]], ["Клиент", ["Unlimited", "Клиент A", "Клиент B"]], ["Тип вагона", ["Unlimited", "Полувагон", "Крытый", "Платформа"]], ["Оператор", ["Unlimited", "Оператор A", "Оператор B"]]],
+        rows: ["Г/к прокат", "Х/к прокат", "Слябы", "Оцинкованный прокат", "Трансформаторный прокат"],
+        directions: ["Назначение A", "Назначение B", "Назначение C", "Оператор A", "Оператор B"]
+      },
+      ports: {
+        label: "Порты",
+        title: "НЛМК. Портовая логистика. Факторный анализ",
+        panelTitle: "Порты: изменение затрат",
+        totalTitle: "Портовые затраты, млрд руб",
+        total: 18.7, base: 17.3, delta: 1.4, volume: 6.8, volumeBase: 6.5, cost: 2750, costBase: 2660,
+        status: "Есть отклонения",
+        factors: [["База", 17.3, "total"], ["Объем", 0.5], ["Структура", 0.4], ["Цены", 0.8], ["Станция", 0.0], ["Рынок", 0.5], ["Тип отправки", 0.1], ["Статнагрузка", 0.0], ["Курс", 0.3], ["Усилия", -0.4], ["Прочее", -0.8], ["Отчет", 18.7, "total"]],
+        filters: [["Порт", ["Unlimited", "Новороссийск", "Усть-Луга", "Санкт-Петербург"]], ["Терминал", ["Unlimited", "Терминал A", "Терминал B"]], ["Услуга порта", ["Unlimited", "Перевалка", "Хранение", "Погрузка"]], ["Партия / судно", ["Unlimited", "Партия A", "Партия B"]], ["Валюта", ["RUB", "USD", "EUR"]]],
+        rows: ["Перевалка", "Хранение", "Погрузка", "Экспедирование", "Прочее"],
+        directions: ["Новороссийск", "Усть-Луга", "СПБ", "Терминал A", "Терминал B"]
+      },
+      mdm: {
+        label: "МДМ",
+        title: "НЛМК. МДМ. Факторный анализ",
+        panelTitle: "МДМ: изменение затрат",
+        totalTitle: "Затраты МДМ, млрд руб",
+        total: 6.4, base: 6.0, delta: 0.4, volume: 1.9, volumeBase: 1.8, cost: 3368, costBase: 3290,
+        status: "Требует уточнения методики",
+        factors: [["База", 6.0, "total"], ["Объем", 0.1], ["Структура", 0.2], ["Цены", 0.2], ["Станция", 0.0], ["Рынок", 0.1], ["Тип отправки", 0.1], ["Статнагрузка", 0.0], ["Курс", 0.0], ["Усилия", -0.1], ["Прочее", -0.2], ["Отчет", 6.4, "total"]],
+        filters: [["Канал МДМ", ["Unlimited", "Канал A", "Канал B", "Канал C"]], ["Регион", ["Unlimited", "РФ", "СНГ", "Экспорт"]], ["Операция", ["Unlimited", "Доставка", "Склад", "Документы"]], ["SLA", ["Unlimited", "В срок", "Риск", "Просрочка"]]],
+        rows: ["Канал A", "Канал B", "Канал C", "Документы", "Прочее"],
+        directions: ["Регион A", "Регион B", "Операция A", "Операция B", "SLA риск"]
+      },
+      containers: {
+        label: "Контейнеры",
+        title: "НЛМК. Контейнерные перевозки. Факторный анализ",
+        panelTitle: "Контейнеры: изменение затрат",
+        totalTitle: "Контейнерные затраты, млрд руб",
+        total: 16.2, base: 15.6, delta: 0.6, volume: 92.0, volumeBase: 88.0, cost: 176000, costBase: 177200,
+        status: "Есть отклонения",
+        factors: [["База", 15.6, "total"], ["Объем", 0.7], ["Структура", 0.5], ["Цены", 0.4], ["Станция", 0.1], ["Рынок", 0.6], ["Тип отправки", 0.2], ["Статнагрузка", -0.1], ["Курс", 0.5], ["Усилия", -0.7], ["Прочее", -1.6], ["Отчет", 16.2, "total"]],
+        filters: [["Линия", ["Unlimited", "Линия A", "Линия B", "Линия C"]], ["Тип контейнера", ["Unlimited", "20 фут", "40 фут", "40 HC"]], ["Терминал", ["Unlimited", "Терминал A", "Терминал B"]], ["TEU / тонны", ["TEU", "Тонны"]], ["Демередж / детеншн", ["Все", "Есть начисления", "Нет начислений"]]],
+        rows: ["20 фут", "40 фут", "40 HC", "Терминалы", "Демередж"],
+        directions: ["Линия A", "Линия B", "Терминал A", "Порт A", "Порожний возврат"]
+      }
+    };
+
+    const state = { page: "inRail", factor: "Цены", object: "Все строки", impact: 0, viewFactor: "Цены" };
+    const els = {
+      title: document.getElementById("page-title"),
+      status: document.getElementById("page-status"),
+      selectedPage: document.getElementById("selected-page"),
+      selectedFactor: document.getElementById("selected-factor"),
+      selectedObject: document.getElementById("selected-object"),
+      kpiTotalTitle: document.getElementById("kpi-total-title"),
+      kpiTotal: document.getElementById("kpi-total"),
+      kpiTotalNote: document.getElementById("kpi-total-note"),
+      kpiDelta: document.getElementById("kpi-delta"),
+      kpiDeltaNote: document.getElementById("kpi-delta-note"),
+      kpiVolume: document.getElementById("kpi-volume"),
+      kpiVolumeNote: document.getElementById("kpi-volume-note"),
+      kpiCost: document.getElementById("kpi-cost"),
+      kpiCostNote: document.getElementById("kpi-cost-note"),
+      factorList: document.getElementById("factor-list"),
+      panelTitle: document.getElementById("panel-title"),
+      wfNote: document.getElementById("wf-note"),
+      waterfall: document.getElementById("waterfall"),
+      leftTitle: document.getElementById("left-title"),
+      rightTitle: document.getElementById("right-title"),
+      leftTable: document.getElementById("left-table"),
+      rightTable: document.getElementById("right-table"),
+      factorTabs: document.getElementById("factor-tabs"),
+      filters: document.getElementById("filters"),
+      toast: document.getElementById("prototype-toast")
+    };
+
+    let toastTimer;
+
+    function fmt(value, digits = 1) {
+      return Number(value).toLocaleString("ru-RU", { maximumFractionDigits: digits, minimumFractionDigits: digits });
+    }
+
+    function fmtInt(value) {
+      return Number(value).toLocaleString("ru-RU", { maximumFractionDigits: 0 });
+    }
+
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add("is-visible");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => els.toast.classList.remove("is-visible"), 1400);
+    }
+
+    function adjusted(value, sensitivity = 1) {
+      return value * (1 + state.impact * sensitivity);
+    }
+
+    function factorSensitivity(label) {
+      const sensitivity = {
+        "Объем": 4.8,
+        "Структура": -3.6,
+        "Цены": 6.4,
+        "Станция": 4.3,
+        "Рынок": -4.9,
+        "Тип отправки": 5.5,
+        "Статнагрузка": -4.2,
+        "Курс": 6.0,
+        "Усилия": -5.2,
+        "Прочее": 3.3
+      };
+      return sensitivity[label] ?? 1;
+    }
+
+    function factorAdjusted(label, value) {
+      const multiplier = Math.max(0.18, 1 + state.impact * factorSensitivity(label));
+      return value * multiplier;
+    }
+
+    function factorValue(label, value, type) {
+      if (label === "База") return pages[state.page].base;
+      if (label === "Отчет") return calcSnapshot(pages[state.page]).total;
+      return type ? value : factorAdjusted(label, value);
+    }
+
+    function calcSnapshot(page) {
+      const factorDelta = page.factors
+        .filter((item) => !item[2])
+        .reduce((sum, [label, value]) => sum + factorAdjusted(label, value), 0);
+      const total = page.base + factorDelta;
+      return { total, delta: total - page.base };
+    }
+
+    function tableScale(multiplier = 1) {
+      return 1 + state.impact * multiplier + (commonFactors.indexOf(state.viewFactor) + 1) * 0.015;
+    }
+
+    function deltaClass(value) {
+      return value >= 0 ? "delta-up" : "delta-down";
+    }
+
+    function pulseKpis() {
+      document.querySelectorAll(".tile").forEach((tile) => {
+        tile.classList.add("is-pulsing");
+        setTimeout(() => tile.classList.remove("is-pulsing"), 220);
+      });
+    }
+
+    function renderKpis(page) {
+      const snapshot = calcSnapshot(page);
+      const total = snapshot.total;
+      const base = page.base;
+      const delta = snapshot.delta;
+      const volume = adjusted(page.volume, 0.55);
+      const cost = adjusted(page.cost, 0.65);
+      const volumeDeltaPct = ((volume / page.volumeBase - 1) * 100);
+      const costDeltaPct = ((cost / page.costBase - 1) * 100);
+      const totalDeltaPct = ((total / base - 1) * 100);
+
+      els.kpiTotalTitle.innerHTML = `${page.totalTitle.includes(",") ? page.totalTitle : page.totalTitle + ", <span class=\"unit\">млрд руб</span>"}`;
+      els.kpiTotal.textContent = page.totalTitle.includes("шт") ? fmtInt(total) : fmt(total);
+      els.kpiTotalNote.innerHTML = `${fmt(base)} &nbsp;(<span class="${deltaClass(totalDeltaPct)}">${totalDeltaPct >= 0 ? "▲" : "▼"} ${fmt(Math.abs(totalDeltaPct))}%</span>)`;
+      els.kpiDelta.textContent = `${delta >= 0 ? "+" : ""}${fmt(delta)}`;
+      els.kpiDeltaNote.textContent = "к базовому периоду";
+      els.kpiVolume.textContent = page.volume > 80 ? fmtInt(volume) : fmt(volume);
+      els.kpiVolumeNote.innerHTML = `${fmt(page.volumeBase)} &nbsp;(<span class="${deltaClass(volumeDeltaPct)}">${volumeDeltaPct >= 0 ? "▲" : "▼"} ${fmt(Math.abs(volumeDeltaPct))}%</span>)`;
+      els.kpiCost.textContent = page.cost > 10000 ? fmtInt(cost) : fmtInt(cost);
+      els.kpiCostNote.innerHTML = `${fmtInt(page.costBase)} &nbsp;(<span class="${deltaClass(costDeltaPct)}">${costDeltaPct >= 0 ? "▲" : "▼"} ${fmt(Math.abs(costDeltaPct))}%</span>)`;
+      els.factorList.innerHTML = page.factors
+        .filter((item) => !item[2])
+        .slice(0, 4)
+        .map(([name, value]) => {
+          const shown = factorAdjusted(name, value);
+          return `<span>${name}</span><span>${shown >= 0 ? "+" : ""}${fmt(shown)}</span>`;
+        })
+        .join("");
+      els.wfNote.innerHTML = `Δ затрат<br>${delta >= 0 ? "+" : ""}${fmt(delta)}`;
+    }
+
+    function renderWaterfall(page) {
+      const factorMax = Math.max(
+        1,
+        ...page.factors
+          .filter(([, , type]) => !type)
+          .map(([label, value]) => Math.abs(factorAdjusted(label, value)))
+      );
+      const totalMax = Math.max(1, Math.abs(page.base), Math.abs(calcSnapshot(page).total));
+      els.waterfall.innerHTML = page.factors.map(([label, value, type]) => {
+        const shown = factorValue(label, value, type);
+        const h = type === "total"
+          ? Math.max(58, Math.round(58 + (Math.abs(shown) / totalMax) * 28))
+          : Math.max(10, Math.round(12 + (Math.abs(shown) / factorMax) * 74));
+        const cls = type === "total" ? "total" : shown < 0 ? "negative" : "";
+        const selected = label === state.factor ? " is-selected" : "";
+        return `
+          <div class="wf-item${selected}" data-factor="${label}">
+            <div class="wf-bar-wrap"><div class="wf-bar ${cls}" style="--h:${h}%">${type ? fmt(shown) : (shown >= 0 ? "" : "-") + fmt(Math.abs(shown))}</div></div>
+            <div class="wf-label">${label}</div>
+          </div>`;
+      }).join("");
+
+      els.waterfall.querySelectorAll(".wf-item").forEach((item) => {
+        item.addEventListener("click", () => selectFactor(item.dataset.factor, true));
+      });
+    }
+
+    function makeRows(names, seed = 1) {
+      const scale = tableScale(1.25);
+      return names.map((name, index) => {
+        const sign = index % 4 === 3 ? -1 : 1;
+        return {
+          name,
+          price: sign * (42 + index * 63 + seed * 7) * scale,
+          structure: (index % 3 === 0 ? 1 : -1) * (120 + index * 88 + seed * 11) * (scale + 0.08),
+          station: (index % 2 === 0 ? -1 : 1) * (18 + index * 19 + seed * 3) * (scale - 0.04)
+        };
+      });
+    }
+
+    function barCell(value, max, extra = "") {
+      const w = Math.max(3, Math.round(Math.abs(value) / max * 92));
+      const cls = value < 0 ? "negative" : extra;
+      return `<td class="bar-cell ${cls}" style="--w:${w}%; --left:${value < 0 ? 50 : 50}%"><span>${fmt(value)}</span></td>`;
+    }
+
+    function renderLeftTable(page) {
+      const rows = makeRows(page.rows, page.delta);
+      const max = Math.max(...rows.flatMap((row) => [Math.abs(row.price), Math.abs(row.structure), Math.abs(row.station)]));
+      els.leftTitle.innerHTML = `Факторы в разрезе аналитики, <span class="unit">млн руб</span> <span class="hint">*клик по строке меняет выбор</span>`;
+      els.leftTable.innerHTML = `
+        <thead><tr><th class="name-col">Аналитика</th><th>Цены</th><th>Структура</th><th>Станция / операция</th></tr></thead>
+        <tbody>${rows.map((row) => `
+          <tr data-object="${row.name}">
+            <td class="name-col">${row.name}</td>
+            ${barCell(row.price, max, row.price < 0 ? "red" : "")}
+            ${barCell(row.structure, max)}
+            ${barCell(row.station, max)}
+          </tr>`).join("")}</tbody>`;
+      addRowHandlers(els.leftTable);
+    }
+
+    function renderTabs() {
+      els.factorTabs.innerHTML = commonFactors.map((factor) => `<button class="table-tab${factor === state.viewFactor ? " active" : ""}" data-factor="${factor}">${factor}</button>`).join("");
+      els.factorTabs.querySelectorAll(".table-tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          state.viewFactor = tab.dataset.factor;
+          selectFactor(tab.dataset.factor, false);
+          renderRightTable(pages[state.page]);
+          showToast(`Аналитика: ${tab.dataset.factor}`);
+        });
+      });
+    }
+
+    function renderRightTable(page) {
+      const factorIndex = commonFactors.indexOf(state.viewFactor) + 1;
+      const scale = tableScale(1.45);
+      const rows = page.directions.map((name, index) => {
+        const base = -(260 + index * 830 + factorIndex * 42);
+        const deviation = (index % 4 === 3 ? -1 : 1) * (18 + index * 124 + factorIndex * 11) * scale;
+        const current = base + deviation;
+        const price = (index % 3 === 1 ? -1 : 1) * (8 + index * 24 + factorIndex * 5) * (scale + 0.06);
+        const structure = deviation - price;
+        return { name, base, current, deviation, price, structure };
+      });
+      const max = Math.max(...rows.flatMap((row) => [Math.abs(row.deviation), Math.abs(row.price), Math.abs(row.structure)]));
+      els.rightTitle.innerHTML = `${state.viewFactor}: направления и компоненты, <span class="unit">млн руб</span>`;
+      els.rightTable.innerHTML = `
+        <thead><tr><th>Направление / объект</th><th>База</th><th>Отчет</th><th>Отклонение</th><th>${state.viewFactor}</th><th>Объем и структура</th></tr></thead>
+        <tbody>${rows.map((row) => `
+          <tr data-object="${row.name}">
+            <td>${row.name}</td>
+            <td>${fmt(row.base)}</td>
+            <td>${fmt(row.current)}</td>
+            ${barCell(row.deviation, max)}
+            ${barCell(row.price, max, row.price < 0 ? "red" : "")}
+            ${barCell(row.structure, max)}
+          </tr>`).join("")}
+          <tr class="total-row" data-object="Итого">
+            <td>Итого</td><td>${fmt(rows.reduce((s, r) => s + r.base, 0))}</td><td>${fmt(rows.reduce((s, r) => s + r.current, 0))}</td>
+            ${barCell(rows.reduce((s, r) => s + r.deviation, 0), max * 2)}
+            ${barCell(rows.reduce((s, r) => s + r.price, 0), max * 2)}
+            ${barCell(rows.reduce((s, r) => s + r.structure, 0), max * 2)}
+          </tr>
+        </tbody>`;
+      addRowHandlers(els.rightTable);
+    }
+
+    function addRowHandlers(table) {
+      table.querySelectorAll("tbody tr").forEach((row) => {
+        row.addEventListener("click", () => {
+          document.querySelectorAll(".factor-table tbody tr").forEach((item) => item.classList.remove("is-selected"));
+          row.classList.add("is-selected");
+          state.object = row.dataset.object;
+          updateSelection();
+          showToast(`Выбран объект: ${state.object}`);
+        });
+      });
+    }
+
+    function renderFilters(page) {
+      const filterList = [...baseFilters, ...page.filters];
+      els.filters.innerHTML = filterList.map(([label, options]) => `
+        <div class="filter-group">
+          <label>${label}</label>
+          <select class="filter-select" data-label="${label}">
+            ${options.map((option) => `<option>${option}</option>`).join("")}
+          </select>
+        </div>`).join("");
+      els.filters.querySelectorAll(".filter-select").forEach((select, index) => {
+        select.addEventListener("change", () => {
+          select.classList.toggle("is-changed", select.selectedIndex !== 0);
+          state.impact = (index + select.selectedIndex + 1) * 0.05;
+          state.object = `${select.dataset.label}: ${select.value}`;
+          renderKpis(page);
+          renderWaterfall(page);
+          renderLeftTable(page);
+          renderRightTable(page);
+          pulseKpis();
+          updateSelection();
+          showToast(`Фильтр применен: ${select.value}`);
+        });
+      });
+    }
+
+    function selectFactor(factor, rerenderRight) {
+      state.factor = factor;
+      if (commonFactors.includes(factor)) state.viewFactor = factor;
+      updateSelection();
+      document.querySelectorAll(".wf-item").forEach((item) => item.classList.toggle("is-selected", item.dataset.factor === factor));
+      renderTabs();
+      if (rerenderRight) renderRightTable(pages[state.page]);
+    }
+
+    function updateSelection() {
+      const page = pages[state.page];
+      if (els.selectedPage) els.selectedPage.textContent = page.label;
+      if (els.selectedFactor) els.selectedFactor.textContent = state.factor;
+      if (els.selectedObject) els.selectedObject.textContent = state.object;
+    }
+
+    function renderPage(pageKey, resetImpact = true) {
+      const page = pages[pageKey];
+      state.page = pageKey;
+      state.factor = page.factors.find((item) => item[0] === "Цены") ? "Цены" : page.factors[1][0];
+      state.viewFactor = commonFactors.includes(state.factor) ? state.factor : "Цены";
+      state.object = "Все строки";
+      if (resetImpact) state.impact = 0;
+      document.querySelectorAll(".tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.page === pageKey));
+      els.title.textContent = page.title;
+      els.status.textContent = page.status;
+      els.panelTitle.textContent = page.panelTitle;
+      renderKpis(page);
+      renderWaterfall(page);
+      renderTabs();
+      renderLeftTable(page);
+      renderRightTable(page);
+      renderFilters(page);
+      updateSelection();
+      pulseKpis();
+    }
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        renderPage(tab.dataset.page);
+        showToast(`Раздел: ${pages[tab.dataset.page].label}`);
+      });
+    });
+
+    document.getElementById("metric-mode").addEventListener("change", (event) => {
+      const mode = event.target.value;
+      state.impact = mode === "Затраты" ? 0 : mode === "Стоимость / т" ? 0.14 : -0.1;
+      const page = pages[state.page];
+      renderKpis(page);
+      renderWaterfall(page);
+      renderLeftTable(page);
+      renderRightTable(page);
+      pulseKpis();
+      showToast(`Показатель: ${mode}`);
+    });
+
+    document.querySelectorAll(".period-control").forEach((select, index) => {
+      select.addEventListener("change", () => {
+        state.impact = (index + 1) * 0.035;
+        const page = pages[state.page];
+        renderKpis(page);
+        renderWaterfall(page);
+        renderLeftTable(page);
+        renderRightTable(page);
+        pulseKpis();
+        showToast(`Период изменен: ${select.value}`);
+      });
+    });
+
+    document.getElementById("left-mode").addEventListener("click", () => {
+      state.object = "Режим: аналитика по продуктам";
+      updateSelection();
+      showToast("Режим детализации: продукт");
+    });
+
+    document.getElementById("right-mode").addEventListener("click", () => {
+      state.object = "Режим: детализация направлений";
+      updateSelection();
+      showToast("Режим детализации: направления");
+    });
+
+    document.getElementById("reset").addEventListener("click", () => {
+      document.getElementById("metric-mode").value = "Затраты";
+      renderPage("inRail");
+      showToast("Состояние прототипа сброшено");
+    });
+
+    renderPage("inRail");
+  </script>
+</body>
+</html>
